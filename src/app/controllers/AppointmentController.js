@@ -1,8 +1,10 @@
 import * as Yup from 'yup';
-import { startOfHour, parseISO, isBefore } from 'date-fns';
+import { startOfHour, parseISO, isBefore, format, subHours } from 'date-fns';
+import pt from 'date-fns/locale/pt';
 import User from '../models/User';
 import Appointment from '../models/Appointment';
 import File from '../models/File';
+import Notification from '../schemas/Notification';
 
 class AppointmentController {
   async index(req, res) {
@@ -89,8 +91,39 @@ class AppointmentController {
     const appointment = await Appointment.create({
       user_id: req.userId,
       provider_id,
-      date: parseISO(date),
+      date,
     });
+
+    const { name } = await User.findByPk(req.userId);
+    const formatedDate = format(startHour, "'dia' dd 'de' MMMM', às' H:mm'h'", {
+      locale: pt,
+    });
+
+    await Notification.create({
+      content: `Você tem um novo agendamento de ${name} para ${formatedDate}.`,
+      user: provider_id,
+    });
+    return res.json(appointment);
+  }
+
+  async delete(req, res) {
+    const appointment = await Appointment.findByPk(req.params.id);
+
+    if (appointment.user_id !== req.userId) {
+      return res.status(401).json({ error: 'Não autorizado. ' });
+    }
+
+    const earlierDate = subHours(appointment.date, 2);
+
+    if (isBefore(earlierDate, new Date())) {
+      return res.status(401).json({
+        error:
+          'Não é possível cancelar agendamentos - sem multa - com menos de 2h de antecedência.',
+      });
+    }
+
+    appointment.canceled_at = new Date();
+    await appointment.save();
 
     return res.json(appointment);
   }
