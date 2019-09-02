@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "repository": "git@github.com:jonathanjuliani/rocketseat-bootcamp-modulo02.git",
-  "author": "Jonathan Juliani <jonathan.juniani@userede.com.br>",
+  "author": "Jonathan Juliani <jonathanjuliani@outlook.com>",
   "license": "MIT",
   "scripts": {
     "dev": "nodemon src/server.js"
